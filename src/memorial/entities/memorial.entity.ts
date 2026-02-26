@@ -38,6 +38,14 @@ export class Memorial {
   @Column({ type: 'decimal', precision: 11, scale: 8 })
   longitude: number;
 
+  // --- ESTES ERAM OS CAMPOS QUE FALTAVAM ---
+  @Column({ type: 'text', nullable: true })
+  autoras: string;
+
+  @Column({ type: 'text', nullable: true })
+  revisao: string;
+  // ----------------------------------------
+
   @CreateDateColumn({ name: 'data_publicacao' })
   data_publicacao: Date;
 
@@ -48,6 +56,7 @@ export class Memorial {
   @Column()
   admin_id: number;
 
+  // Relação com a entidade PalavraChave (Mantém arquivo separado)
   @ManyToMany(() => PalavraChave, (palavra) => palavra.autores, { cascade: true })
   @JoinTable({
     name: 'autor_has_palavras',
@@ -56,6 +65,7 @@ export class Memorial {
   })
   palavras_chave: PalavraChave[];
 
+  // Relação com a entidade Referencia (Mantém arquivo separado)
   @ManyToMany(() => Referencia, (ref) => ref.autores, { cascade: true })
   @JoinTable({
     name: 'autor_has_referencias',

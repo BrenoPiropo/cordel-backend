@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsNumber } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
 
 export class CreateBlogDto {
   @IsString()
@@ -7,12 +7,19 @@ export class CreateBlogDto {
 
   @IsString()
   @IsNotEmpty({ message: 'O conteúdo não pode estar vazio' })
-  conteudo: string; // Volte para 'conteudo' aqui
+  conteudo: string;
 
   @IsOptional()
   @IsString()
   imagem_capa?: string;
 
-  @IsNumber()
-  admin_id: number;
+  // Recebemos as tags como string (JSON) do FormData
+  @IsOptional()
+  @IsString()
+  tags?: string;
+
+  // O admin_id geralmente pegamos do Token JWT no Controller, 
+  // mas deixamos aqui se precisar passar via body
+  @IsOptional()
+  admin_id?: number;
 }

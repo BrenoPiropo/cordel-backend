@@ -9,7 +9,8 @@ import {
   ParseIntPipe, 
   UseGuards, 
   UseInterceptors, 
-  UploadedFile 
+  UploadedFile,
+  Req 
 } from '@nestjs/common';
 import { BlogService } from './blog.service';
 import { CreateBlogDto } from './dto/create-blog.dto';
@@ -22,50 +23,42 @@ import { storageConfig } from '../utils/file-upload.utils';
 export class BlogController {
   constructor(private readonly blogService: BlogService) {}
 
-  /**
-   * PROTEGIDO: Cria um post com upload de imagem de capa.
-   * O Interceptor 'imagem' deve bater com o nome do campo enviado no Insomnia (Multipart Form).
-   */
   @UseGuards(JwtAuthGuard)
   @Post()
-  @UseInterceptors(FileInterceptor('imagem', { storage: storageConfig('blog') }))
+  @UseInterceptors(FileInterceptor('capa', { storage: storageConfig('blog') }))
   async create(
     @Body() createBlogDto: CreateBlogDto,
     @UploadedFile() file: Express.Multer.File,
+    @Req() req
   ) {
-    // Se um arquivo foi enviado, anexamos o caminho ao DTO antes de salvar no banco
     if (file) {
+      // Ajustado para bater com o nome na sua Entity: imagem_url
       createBlogDto.imagem_capa = `/uploads/blog/${file.filename}`;
     }
+
+    createBlogDto.admin_id = req.user.userId;
     
     return this.blogService.create(createBlogDto);
   }
+
   @Get('slug/:slug')
   findBySlug(@Param('slug') slug: string) {
     return this.blogService.findBySlug(slug);
   }
-  /**
-   * PÚBLICO: Lista todos os posts do blog para os visitantes.
-   */
+
   @Get()
   findAll() {
     return this.blogService.findAll();
   }
 
-  /**
-   * PÚBLICO: Busca um post específico pelo ID.
-   */
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.blogService.findOne(id);
   }
 
-  /**
-   * PROTEGIDO: Atualiza um post. Também permite atualizar a imagem de capa.
-   */
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
-  @UseInterceptors(FileInterceptor('imagem', { storage: storageConfig('blog') }))
+  @UseInterceptors(FileInterceptor('capa', { storage: storageConfig('blog') }))
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateBlogDto: UpdateBlogDto,
@@ -77,9 +70,6 @@ export class BlogController {
     return this.blogService.update(id, updateBlogDto);
   }
 
-  /**
-   * PROTEGIDO: Remove uma postagem.
-   */
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {

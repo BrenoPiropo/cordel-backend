@@ -1,14 +1,8 @@
 import { 
-  Controller, 
-  Get, 
-  Post, 
-  Body, 
-  Patch, 
-  Param, 
-  Delete, 
-  ParseIntPipe, 
-  UseGuards 
+  Controller, Post, Get, Body, Param, Delete, Patch, 
+  UseGuards, UseInterceptors, UploadedFiles, ParseIntPipe, Req 
 } from '@nestjs/common';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { MemorialService } from './memorial.service';
 import { CreateMemorialDto } from './dto/create-memorial.dto';
 import { UpdateMemorialDto } from './dto/update-memorial.dto';
@@ -18,52 +12,50 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 export class MemorialController {
   constructor(private readonly memorialService: MemorialService) {}
 
-  /**
-   * PROTEGIDO: Cria um novo autor no memorial.
-   * Requer Bearer Token no cabeçalho da requisição.
-   */
   @UseGuards(JwtAuthGuard)
   @Post()
-  create(@Body() createMemorialDto: CreateMemorialDto) {
-    return this.memorialService.create(createMemorialDto);
+  @UseInterceptors(FileFieldsInterceptor([
+    { name: 'foto', maxCount: 1 },
+    { name: 'pdf', maxCount: 1 },
+  ]))
+  async create(
+    @Body() createMemorialDto: CreateMemorialDto,
+    @UploadedFiles() files: { foto?: Express.Multer.File[], pdf?: Express.Multer.File[] },
+    @Req() req: any
+  ) {
+    const adminId = req.user.userId || req.user.id; 
+    return this.memorialService.create(createMemorialDto, files, adminId);
   }
 
-  /**
-   * PÚBLICO: Lista todos os autores.
-   * Usado para alimentar o Mapa Associativo no frontend.
-   */
   @Get()
   findAll() {
     return this.memorialService.findAll();
   }
-  @Get('slug/:slug') // Rota para a página dinâmica
+
+  @Get('slug/:slug')
   findBySlug(@Param('slug') slug: string) {
     return this.memorialService.findBySlug(slug);
   }
-  /**
-   * PÚBLICO: Retorna os detalhes de um autor específico pelo ID.
-   */
+
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.memorialService.findOne(id);
   }
 
-  /**
-   * PROTEGIDO: Atualiza dados de um autor existente.
-   * O UpdateMemorialDto permite o envio parcial de campos.
-   */
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
-  update(
-    @Param('id', ParseIntPipe) id: number, 
-    @Body() updateMemorialDto: UpdateMemorialDto
+  @UseInterceptors(FileFieldsInterceptor([
+    { name: 'foto', maxCount: 1 },
+    { name: 'pdf', maxCount: 1 },
+  ]))
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateMemorialDto: UpdateMemorialDto,
+    @UploadedFiles() files: { foto?: Express.Multer.File[], pdf?: Express.Multer.File[] }
   ) {
-    return this.memorialService.update(id, updateMemorialDto);
+    return this.memorialService.update(id, updateMemorialDto, files);
   }
 
-  /**
-   * PROTEGIDO: Remove um autor do memorial e do mapa.
-   */
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {

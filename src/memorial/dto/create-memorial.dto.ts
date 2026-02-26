@@ -1,17 +1,7 @@
-import { IsString, IsNotEmpty, IsNumber, IsOptional, IsArray, ValidateNested } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
 
-// Classes auxiliares para validar os objetos dentro do array
-class PalavraChaveDto {
-  @IsString()
-  termo: string;
-}
-
-class ReferenciaDto {
-  @IsString()
-  nome_referencia: string;
-}
-
+// Mantemos as classes auxiliares, mas no DTO principal 
+// aceitaremos string para compatibilidade com FormData
 export class CreateMemorialDto {
   @IsString()
   @IsNotEmpty()
@@ -21,11 +11,14 @@ export class CreateMemorialDto {
   @IsNotEmpty()
   biografia: string;
 
-  @IsNumber()
-  latitude: number;
+  // Mudamos para String por causa do FormData (convertemos no Service)
+  @IsString()
+  @IsNotEmpty()
+  latitude: string;
 
-  @IsNumber()
-  longitude: number;
+  @IsString()
+  @IsNotEmpty()
+  longitude: string;
 
   @IsOptional()
   @IsString()
@@ -35,19 +28,20 @@ export class CreateMemorialDto {
   @IsString()
   pdf_url?: string;
 
-  @IsNumber()
-  admin_id: number;
-
-  // Novos campos adicionados aqui
   @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => PalavraChaveDto)
-  palavras_chave?: PalavraChaveDto[];
+  @IsString()
+  autoras?: string;
 
   @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => ReferenciaDto)
-  referencias_citadas?: ReferenciaDto[];
+  @IsString()
+  revisao?: string;
+
+  // Recebemos como string para podermos fazer JSON.parse no Service
+  @IsOptional()
+  @IsString()
+  palavras_chave?: string;
+
+  @IsOptional()
+  @IsString()
+  referencias_citadas?: string;
 }

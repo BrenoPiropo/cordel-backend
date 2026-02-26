@@ -1,6 +1,21 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { CreateMemorialDto } from './create-memorial.dto';
+import { IsOptional, IsString } from 'class-validator';
 
-// O PartialType faz com que todos os campos do CreateMemorialDto
-// sejam opcionais (?) no momento do Update
-export class UpdateMemorialDto extends PartialType(CreateMemorialDto) {}
+export class UpdateMemorialDto extends PartialType(CreateMemorialDto) {
+  @IsOptional()
+  @IsString()
+  latitude?: string;
+
+  @IsOptional()
+  @IsString()
+  longitude?: string;
+
+  @IsOptional()
+  @IsString()
+  autoras?: string;
+
+  @IsOptional()
+  @IsString()
+  revisao?: string;
+}
